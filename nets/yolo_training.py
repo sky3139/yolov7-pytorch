@@ -449,11 +449,12 @@ class YOLOLoss(nn.Module):
             #   anchors_i [num_anchor, 2]
             #----------------------------------------------------#
             anchors_i = torch.from_numpy(self.anchors[i] / self.stride[i]).type_as(predictions[i])
+            # shape=p[i].shape
             #-------------------------------------------#
             #   计算获得对应特征层的高宽
             #-------------------------------------------#
-            gain[2:6] = torch.tensor(predictions[i].shape)[[3, 2, 3, 2]]
-            
+            gain[2:6] = torch.tensor(predictions[i].shape,dtype=torch.float32)[[3, 2, 3, 2]]
+            gain_int = torch.tensor(predictions[i].shape,dtype=torch.int32)[[3, 2, 3, 2]]
             #-------------------------------------------#
             #   将真实框乘上gain，
             #   其实就是将真实框映射到特征层上
@@ -510,7 +511,7 @@ class YOLOLoss(nn.Module):
             #   a代表属于该特征点的第几个先验框
             #-------------------------------------------#
             a = t[:, 6].long()  # anchor indices
-            indices.append((b, a, gj.clamp_(0, gain[3] - 1), gi.clamp_(0, gain[2] - 1)))  # image, anchor, grid indices
+            indices.append((b, a, gj.clamp_(0, gain_int[3] - 1), gi.clamp_(0, gain_int[2] - 1)))  # image, anchor, grid indices
             anchors.append(anchors_i[a])  # anchors
 
         return indices, anchors
